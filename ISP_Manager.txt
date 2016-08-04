@@ -1,0 +1,532 @@
+1. Main conf file:
+
+/usr/local/ispmgr/etc/ispmgr.conf
+------------------------------------------------------------------------------------------
+
+2. LOG file:
+
+/usr/local/ispmgr/var/ispmgr.log
+
+Some other LOG-files are present here too:
+
+/usr/local/ispmgr/var/
+
+Dlya sajtiv loguy je tut:
+
+/var/www/httpd-logs/
+------------------------------------------------------------------------------------------
+
+3. Perform some tests fro ISP Manager:
+
+/usr/local/ispmgr/sbin/unittest -a
+------------------------------------------------------------------------------------------
+
+4. How to install ISP Manager on UBUNTU:
+
+http://www.vps.net/forum/public-forums/tutorials-and-how-tos/1768-step-by-step-guide-to-installing-ispmanager-on-ubuntu
+------------------------------------------------------------------------------------------
+
+6. Some informaiton for every user:
+
+/usr/local/ispmgr/var/userconf/ispmgr.[USER]
+------------------------------------------------------------------------------------------
+
+7. All NS conf files for domains are here:
+
+/var/named/
+------------------------------------------------------------------------------------------
+
+8. All mails are saved here:
+
+[root@isppro ~]# ls -la /var/www/[USER]/data/email/[DOMAIN_NAME]/[MAILBOX]/mail/
+total 20
+drwx------ 3 virtuser_501 shmyr 4096 Mar  8 13:22 .
+drwxr-x--x 3 virtuser_501 shmyr 4096 Mar  8 13:22 ..
+-rw------- 1 virtuser_501 shmyr    0 Mar  8 13:22 Drafts
+drwx------ 5 virtuser_501 shmyr 4096 Mar 24 21:25 .imap
+-rw------- 1 virtuser_501 shmyr  753 Mar 24 21:26 Sent
+-rw------- 1 virtuser_501 shmyr   18 Mar  8 13:22 .subscriptions
+-rw------- 1 virtuser_501 shmyr    0 Mar  8 13:22 Trash
+[root@isppro ~]#
+
+Mail users should be here (it sems it is for SENDMAIL):
+
+[root@isppro ~]# cat /etc/mail/virtusertable
+roman@shmyr.isp virtuser_501
+@shmyr.isp      error:nouser No such user here
+------------------------------------------------------------------------------------------
+
+9. Apache is here (CentOS), main conf file:
+
+/etc/httpd/conf/httpd.conf
+------------------------------------------------------------------------------------------
+
+10. Activate License for ISP and install instruction:
+
+
+Hello John,
+
+We just received automatic request from you to activate ISPManager License for
+IP of your VPS.
+Do you really want to use ISPManager as hosting Control Panel and need License
+activated or it was done in test purposes ?
+Please let us know.
+
+Thank you.
+
+
+ISP Manager license has now been issued for IP 109.123.87.39
+
+To access ISP Manager
+
+http://[your_ip_address]/manager
+
+Login with root username and password.
+
+----------
+To install ISP Manager run the following command in Console of your Linux VPS
+
+wget "http://download.ispsystem.com/install.sh" && sh install.sh
+
+Be aware if SELinux is enabled, it will reboot half way through to disable it,
+you need to run install.sh again to install it.
+
+More information about installation process you can find here:
+
+http://en.ispdoc.com/index.php/Installation_guide_(ISPmanager)
+
+Webmail doesn't work correctly on CentOS. To install webmail in Ubuntu follow
+these instructions: http://vps.net/forum/showpost.php?p=2227&postcount=42
+
+To get ISP Manager working on an Optimised Image -
+
+once you received the license you must run this command to update his ispmanager with the new
+valid key:
+
+wget -O - http://lic.ispsystem.com/ispmgr.lic?ip=YOUR_IP_ADDRESS >
+/usr/local/ispmgr/etc/ispmgr.lic
+
+If this doesn't work use:
+
+wget -O /usr/local/ispmgr/etc/ispmgr.lic
+http://lic.ispsystem.com/ispmgr.lic?ip=YOUR_IP_ADDRESS
+killall ispmgr
+--------------------------------------------------------------------------------------
+
+11. How to install RoundCube:
+
+http://www.vps.net/forum/public-forums/tutorials-and-how-tos/1769-step-by-step-guide-to-installing-roundcube-with-ispmanager-ubuntu
+-------------------------------------------------------------------------------------
+
+12. List of packages versions installed in ISP Manager
+
+/usr/local/ispmgr/etc/pkg-ispmgr.conf
+-------------------------------------------------------------------------------------
+12. ISP, Ubuntu, WebMail
+
+Коли інсталюєш ISP manager на Ubuntu 8.0 - то можна під час інсталяції вибрати і поставити WebMail (Squirell),
+якщо ж інсталюєш ISP manager на Ubuntu 9.0 - тоді такої опції нема (apt-get не знаходить і не ставить такого пакету). 
+Так що треба пробувати ставити з сорсів або інсталити шось на подобі RoundCube
+-------------------------------------------------------------------------------------
+
+14. How to set SSL for ISP Manager sites:
+
+http://www.vps.net/forum/public-forums/tutorials-and-how-tos/672-setting-up-ssl-certificates-using-isp-manager
+-------------------------------------------------------------------------------------
+
+15. Problem with POP3/IMAP:
+
+PROBLEM: root@baseklas:~# telnet 98.158.177.126 110
+	Trying 98.158.177.126...
+	telnet: Unable to connect to remote host: Connection refused
+	root@baseklas:~#
+
+SOLUTION: I fixed the problem.
+	The problem was that 'dovecot-pop3d', 'dovecot-common' and 'dovecot-imapd'
+	packages were not installed on your server.
+	I installed them using this commands:
+
+	apt-get install dovecot-imapd
+	apt-get install dovecot-pop3d
+	apt-get install dovecot-common
+
+	then restarted ISP Manager:
+
+	killall -9 -r ispmgr
+
+	and start 'dovecot':
+
+	root@baseklas:~# /etc/init.d/dovecot restart
+ 	* Restarting IMAP/POP3 mail server dovecot                                   
+                                                                     [ OK ]
+	root@baseklas:~#
+
+	Here is checking that it is working fine:
+
+	root@baseklas:~# telnet 98.158.177.126 110
+	Trying 98.158.177.126...
+	Connected to 98.158.177.126.
+	Escape character is '^]'.
+	+OK Dovecot ready.
+	^]
+	telnet> q
+	Connection closed.
+	root@baseklas:~# telnet 98.158.177.126 143
+	Trying 98.158.177.126...
+	Connected to 98.158.177.126.
+	Escape character is '^]'.
+	* OK Dovecot ready.
+	^]
+	telnet> q
+	Connection closed.
+	root@baseklas:~#
+----------------------------------------------------------------------------------------------------
+
+16. How manually to install and update service that was installed, NOT CHECKED
+
+/usr/local/ispmgr/sbin/pkgctl -D -m ispmgr install [SERVICE]
+/usr/local/ispmgr/sbin/pkgctl -D -m ispmgr activate [SERVICE]
+/usr/local/ispmgr/sbin/pkgctl -D -m check [SERVICE]
+For example:
+
+/usr/local/ispmgr/sbin/pkgctl -D -m ispmgr install phpext php-pgsql-5.1.6-24.el5_4.5
+/usr/local/ispmgr/sbin/pkgctl -D -m ispmgr install fcgi libapache2-mod-fcgid-2.2-1
+-----------------------------------------------------------------------------------------------------
+
+17. How to check GD version for PHP:
+
+	php -r '$info=gd_info();echo $info["GD Version"], "\n";'
+
+    Help po PHP:
+
+	http://softtime.ru/bookphp/
+-----------------------------------------------------------------------------------------------------
+
+17. Some useful URLs:
+
+http://ispsystem.com/software/ispmanager/requirements/
+
+http://ispsystem.com/ru/software/ispmanager/changelog/
+
+Tut je usi versiji ISP dlya vsih OSs:
+
+http://download.ispsystem.com/
+-----------------------------------------------------------------------------------------------------
+
+18. How to install IonCube (on CentOS x86_64) and Softaculous:
+
+1). Download IonCube to '/var/www/html/':
+
+wget http://downloads2.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz
+
+2). Unpack it:
+
+tar -xzvf ioncube_loaders_lin_x86-64.tar.gz
+
+3). Add IonCube extention to 'php.ini' file (for example for PHP 5.1.X):
+
+[Zend]
+zend_extension = /var/www/html/ioncube/ioncube_loader_lin_5.1.so
+zend_extension_ts = /var/www/html/ioncube/ioncube_loader_lin_5.1_ts.so
+
+also you can add
+
+Alias /ioncube /var/www/html/ioncube/
+
+4). Start installation process of Softaculous:
+
+http://www.softaculous.com/docs/install_isp_system
+
+or
+
+- cd /usr/local
+- wget -N http://www.softaculous.com/isp/install_softaculous.php
+- chmod 755 install_softaculous.php
+- check if 'gcc' is installed, if no, run
+
+yum -y install gcc.x86_64
+
+- /[PATH_TO_PHP_BINARY]/php /usr/local/install_softaculous.php
+
+You can find PATH if run:
+
+which php
+
+5). After installation you need to reboot your server/VPS
+
+6a). Add the folliwing line into the file to see 'Softaculous' menu in ISP Manager:
+
+<node name="softaculous" noapi="yes"/>
+
+in '/usr/local/ispmgr/etc/ispmgr.xml' file here (you can find 'pgadmin' and add after it):
+
+    <node name="ext">
+      <node name="webmail" noapi="yes"/>
+      <node name="myadmin" noapi="yes"/>
+      <node name="pgadmin" noapi="yes"/>
+      [OUR LINE]
+      <node name="mindterm" noapi="yes"/>
+    </node>
+
+Should be 3 similar sections.
+
+6b). Then you need to add the fillowing 2 lines into 
+
+'/usr/local/ispmgr/etc/ispmgr_msg_en.xml' file (find 'pgadmin and add after it')
+
+to see 'Softaculous' menu in ISP Manager:
+
+</messages><messages name="feature">
+...
+<msg name="name_softaculous">Softaculous is cool tool</msg>  - OUR LINE
+...
+</messages><messages name="feature.edit">
+
+AND
+
+<messages name="desktop">
+      <msg name="cpset">Settings</msg>
+...
+<msg name="menu_softaculous">Softaculous</msg> - OUR LINE
+...
+<msg name="name_clamav">Antivirus </msg><msg name="title">ISPmanager 4.3 Professional</msg></messages>
+
+7). Link to Softaculous is 
+
+http://IP/softaculous
+
+but we can see some PHP errors. 
+To see them turn ON 'display_errors' option:
+
+display_errors=ON
+
+We can receive error like this :
+
+"Could not write SESSION DATA."
+
+if 'open_basedir; is turned ON.
+So we need to set it
+
+open_basedir = Off
+or
+;open_basedir = On
+
+
+If I go to
+
+http://[IP]/softaculous/
+
+when I logged as root into ISPManager or without login there I received this info:
+
+NO WWW DOMAIN FOUND! PLEASE MAKE A WWW DOMAIN
+
+To see Softaculous working, I need login as user in ISPManager.
+
+
+Also maybe you need to add in 'ispmgr.conf':
+
+extaction softaculous /softaculous/
+
+then
+
+killall ispmgr
+
+"softaculous" shouls appears in "Tools" section.
+
+------------------------------------------------------------------------------------------------------
+
+19. SSL Certificates:
+
+Mozhut' lezhaty CSR i KEY tut:
+
+/var/www/httpd-cert/ - dlya domeniv 4y subdomeniv
+/usr/local/ispmgr/var/cert - hz to4no
+-------------------------------------------------------------------------------------------------------
+
+20. How to install ISPConfig:
+
+http://www.vps.net/forum/public-forums/tutorials-and-how-tos/89-how-to-ispconfig-org-not-ispmanager-free-but-good-control-panel-install-how-to
+-------------------------------------------------------------------------------------------------------
+
+21.  Seems I found a way how to move mail from Plesk server to VPS running ISPManager (OLD VARIANT, new is on FORUM).
+
+1) Plesk server has  maiboxes located in  "/var/qmail/mailnames/"
+directory
+
+like for jo@albrecht.com.au is located here
+
+/var/qmail/mailnames/albrecht.com.au/jo/Maildir/
+
+
+VPS server runs dovecot and all mails are stored under  /var/mail/ directory in
+single files like  /var/mail/virtuser_507
+(where virtuser_510 corresponds to particular mailbox)
+
+Now to migrate mail from Plesk to VPS we need
+
+1. Migrate all mailboxes that we need from  /var/qmail/mailnames/ to VPS
+2. create following script on VPS server:
+
+#!/bin/sh
+maildir=$1
+mailbox=$2
+
+echo Moving mail from $maildir to $mailbox
+
+for i in $( find $maildir/new/ $maildir/cur/ -type f); do
+     formail < "$i" >> $mailbox;
+     echo $i - OK
+done
+
+echo Done
+
+3. create necessary mailboxes in ISPmanager for every domain
+4. and run this ./script.sh ./<domain>/<user>/Maildir 
+/var/mail/virtuser_XXX
+
+where "./<domain>/<user>/Maildir" corresponds to some
+user@domain that we migrated from Plesk, and /var/mail/virtuser_XXX is a mailbox on VPS
+------------------------------------------------------------------------------------------------
+
+22. Create new ISPManager account
+
+http://www.vps.net/blog/2010/07/01/moving-to-the-cloud-creating-your-first-isp-manager-account/
+------------------------------------------------------------------------------------------------
+
+23. How to clean Cached XML records in ISPmanager:
+
+[root@web4 ~]# rm -rf /usr/local/ispmgr/var/.xmlcache
+[root@web4 ~]# killall ispmgr
+[root@web4 ~]#
+------------------------------------------------------------------------------------------------
+
+24. To install PhpMyAdmin on CentOS you need to add the following REPO:
+
+[EPEL]
+name=EPEL 5
+baseurl=http://download.fedora.redhat.com/pub/epel/5/x86_64/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL
+
+
+Content of 'RPM-GPG-KEY-EPEL' file you can find here:
+
+http://download.fedora.redhat.com/pub/epel/RPM-GPG-KEY-EPEL
+
+Then run
+
+/usr/local/ispmgr/sbin/pkgctl -D cache
+
+killall ispmgr
+
+PhpMyAdmin will appear in 'Applications' section in ISPManager
+-----------------------------------------------------------------------------------------------
+
+25. How to install RoudCube on Ubuntu for ISPManager:
+
+-- Download RoundCube from here:
+
+http://sourceforge.net/projects/roundcubemail/files/roundcubemail/0.3.1/roundcubemail-0.3.1.tar.gz/download
+
+-- Unpack it in /var/www/roundcube/ folder;
+
+-- Create conf file for it:
+
+/etc/apache2/conf.d/roundcube.conf
+
+with such content:
+
+Alias /roundcube /var/www/roundcube/
+<Directory /var/www/roundcube>
+        AllowOverride All
+        RemoveHandler .php
+        AddType application/x-httpd-php .php .php3 .php4 .phtml
+        php_admin_value open_basedir :/tmp:.:..:./:../
+        php_admin_value upload_tmp_dir /var/www/roundcube/temp
+        php_admin_value session.save_path /var/www/roundcube/temp
+        php_admin_value safe_mode off
+        DirectoryIndex index.php
+        Order allow,deny
+        Allow from all
+</Directory>
+
+and restart Apache.
+
+-- Then use this documentation:
+
+http://www.vps.net/forum/public-forums/tutorials-and-how-tos/1769-step-by-step-guide-to-installing-roundcube-with-ispmanager-ubuntu
+
+from words
+
+" * While this is uploading, lets go ahead and create a mysql database for Roundcube"
+
+-- When DB is created add/correct DB info into 'config/db.inc.php' file:
+
+$rcmail_config['db_dsnw'] = 'mysql://roundcube:roundcube@localhost/roundcube';
+
+... continue to work with documentation
+
+-- To enable a WebMail link (SquirrelMail is used as default) edit the /usr/local/ispmgr/etc/ispmgr.conf configuration file and edit the path there
+
+ extaction webmail /roundcube/
+
+-- Then restart ISPmanager
+
+killall ispmgr
+----------------------------------------------------------------------------------------------------------
+
+How to update ISPMANAGER by FORCE:
+
+/usr/local/ispmgr/sbin/update.sh --force ispmgr
+----------------------------------------------------------------------------------------------------------
+FAST-CGI for DEBIAN or UBUNTU
+
+http://phpsuxx.blogspot.com/2010/01/php-fastcgi-ispmanager-debian-5-lenny.html
+----------------------------------------------------------------------------------------------------------
+How to install NGinx on ISPManager
+
+http://phpsuxx.blogspot.com/2009/09/nginx-ispmanager-centos5.html
+===========================================================================================================
+
+Update ISPMANAGER manually:
+
+http://gostroy.org.ua/panser/panel/ispmanager/update
+
+To reinstall current ISPManager need to do the following:
+
+1. kill -9 ISPMGR_PID
+
+2. Download this package for Ubuntu 10.04.3: http://master.download.ispsystem.com/Linux-cc6/x86_64/ISPmanager-Pro/install.tgz
+for other OS download package from other location.
+
+3. tar -xvz --directory=/usr/local/ispmgr -f install.tgz
+
+4. rm -rf /usr/local/ispmgr/var/.xmlcache
+
+5. Restart Apache
+==========================================================================================================
+
+DoveCot:
+
+It uses only "MailDir" format and all mailboxes MUST be configured to use MailDir. This is here:
+
+ /etc/dovecot/dovecot.passwd 
+
+If you see "mbox" there, you will need to chnage to ".maildir" all of them.
+
+Then ".maildir" must be created manually in appropriate location and then "cur", "new" and "tmp" subfolders should be created manually in ".maildir".
+Do not forget to set correct permissions:
+
+700
+
+and ownerships:
+
+USER:USER
+==========================================================================================================
+
+SendMail:
+
+To use Remote MX, need to remove site from this file:
+
+/etc/mail/local-host-names
+==========================================================================================================
