@@ -151,8 +151,6 @@ nadaje uzeru prava root-a dlya vsih isnuju4yh i majbutnih baz (bazhano 2-j varia
 
  GRANT ALL privileges on *.* to 'fcgmedia_kaltura'@'localhost' with grant option;
 
- GRANT ALL privileges on *.* to 'root'@'90.195.120.109' IDENTIFIED BY '845eEWdfksniermnklnkg3erg' with grant option;
-
  GRANT ALL PRIVILEGES ON database.* TO ‘user’@'your_remote_host' IDENTIFIED BY 'newpassword';
 
 (If it is cPanel, then IP should be added in "Main >> SQL Services >> Additional MySQL Access Hosts" and then access from that IP can be allowed from user's cPanel)
