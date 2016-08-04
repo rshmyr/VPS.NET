@@ -1,0 +1,367 @@
+Had to do some fine tuning of MySQL 4.1.9 and here is what my.cnf file looks like for a 2GHz machine with 1GB of memory.
+
+[mysqld]
+socket=/path/to/mysql.sock
+datadir=/var/lib/mysql
+skip-locking
+skip-innodb
+# MySQL 4.x has query caching available.
+# Enable it for vast improvement and it may be all you need to tweak.
+query_cache_type=1
+query_cache_limit=1M
+query_cache_size=32M
+# max_connections=500
+# Reduced to 200 as memory will not be enough for 500 connections.
+# memory=key_buffer+(sort_buffer_size+read_buffer_size)*max_connections
+# which is now: 64 + (1 + 1) * 200 = 464 MB
+# max_connections = approx. MaxClients setting in httpd.conf file
+# Default set to 100.
+#max_connections=200
+#interactive_timeout=180
+interactive_timeout=100
+# Reduced wait_timeout to prevent idle clients holding connections.
+#wait_timeout=30
+wait_timeout=15
+connect_timeout=10
+# max_connect_errors is set to 10 by default
+#max_connect_errors=10
+#table_cache=256
+#table_cache=1024
+# Checked opened tables and adjusted accordingly after running for a while.
+table_cache=512
+#tmp_table_size=32M by default
+#thread_cache=128
+# Reduced it to 32 to prevent memory hogging. Also, see notes below.
+thread_cache=32
+# key_buffer=258M
+# Reduced it by checking current size of *.MYI files, see notes below.
+key_buffer=128M
+# Commented out the buffer sizes and keeping the default.
+# sort_buffer_size=2M by default.
+#sort_buffer_size=1M
+# read_buffer_size=128K by default.
+#read_buffer_size=1M
+# 1Mb of read_rnd_buffer_size for 1GB RAM -- see notes below.
+# read_rnd_buffer_size=256K by default.
+#read_rnd_buffer_size=1M
+# myisam_sort_buffer_size used for ALTER, OPTIMIZE, REPAIR TABLE commands.
+# myisam_sort_buffer_size=8M by default.
+#myisam_sort_buffer_size=64M
+# thread_concurrency = 2 * (no. of CPU)
+thread_concurrency=2
+# log slow queries is a must. Many queries that take more than 2 seconds.
+# If so, then your tables need enhancement.
+log_slow_queries=/var/log/mysqld.slow.log
+long_query_time=2
+
+[mysql.server]
+user=mysql
+basedir=/var/lib
+
+[safe_mysqld]
+err-log=/var/log/mysqld.log
+pid-file=/var/run/mysqld/mysqld.pid
+open_files_limit=8192
+
+[mysqldump]
+quick
+max_allowed_packet=16M
+
+[mysql]
+no-auto-rehash
+# Remove the next comment character if you are not familiar with SQL
+#safe-updates
+#                                                                                     Tuning / Optimizing my.cnf file for MySQL | LinuxWebLog.com (p3 of 8)
+key_buffer=64M
+sort_buffer=64M
+read_buffer=16M
+write_buffer=16M
+
+[myisamchk]
+key_buffer=64M
+sort_buffer=64M
+read_buffer=16M
+write_buffer=16M
+
+[mysqlhotcopy]
+interactive-timeout
+
+[client]
+socket=/path/to/mysql.sock
+
+Below are notes on some of the important variables, I took down while tuning the config file.
+    1. query_cache_size:
+          + MySQL 4 provides one feature that can prove very handy - a query cache. In a situation where the database has to repeatedly run the same
+            queries on the same data set, returning the same results each time, MySQL can cache the result set, avoiding the overhead of running through
+            the data over and over and is extremely helpful on busy servers.
+    2. key_buffer_size:
+          + The value of key_buffer_size is the size of the buffer used with indexes. The larger the buffer, the faster the SQL command will finish and a
+            result will be returned. The rule-of-thumb is to set the key_buffer_size to at least a quarter, but no more than half, of the total amount of
+            memory on the server. Ideally, it will be large enough to contain all the indexes (the total size of all .MYI files on the server).
+          + A simple way to check the actual performance of the buffer is to examine four additional variables: key_read_requests, key_reads,
+            key_write_requests, and key_writes.
+          + If you divide the value of key_read by the value of key_reads_requests, the result should be less than 0.01. Also, if you divide the value of
+            key_write by the value of key_writes_requests, the result should be less than 1.
+    3. table_cache:
+          + The default is 64. Each time MySQL accesses a table, it places it in the cache. If the system accesses many tables, it is faster to have these
+            in the cache. MySQL, being multi-threaded, may be running many queries on the table at one time, and each of these will open a table. Examine
+            the value of open_tables at peak times. If you find it stays at the same value as your table_cache value, and then the number of opened_tables
+            starts rapidly increasing, you should increase the table_cache if you have enough memory.
+    4. sort_buffer:
+          + The sort_buffer is very useful for speeding up myisamchk operations (which is why it is set much higher for that purpose in the default
+            configuration files), but it can also be useful everyday when performing large numbers of sorts.
+    5. read_rnd_buffer_size:
+          + The read_rnd_buffer_size is used after a sort, when reading rows in sorted order. If you use many queries with ORDER BY, upping this can
+            improve performance. Remember that, unlike key_buffer_size and table_cache, this buffer is allocated for each thread. This variable was renamed
+            from record_rnd_buffer in MySQL 4.0.3. It defaults to the same size as the read_buffer_size. A rule-of-thumb is to allocate 1KB for each 1MB of
+            memory on the server, for example 1MB on a machine with 1GB memory.
+    6. thread_cache:
+          + If you have a busy server that's getting a lot of quick connections, set your thread cache high enough that the Threads_created value in SHOW
+            STATUS stops increasing. This should take some of the load off of the CPU.
+    7. tmp_table_size:
+          + "Created_tmp_disk_tables" are the number of implicit temporary tables on disk created while executing statements and "created_tmp_tables" are
+ memory-based. Obviously it is bad if you have to go to disk instead of memory all the time.
+------------------------------------------------------------------------------------------------
+
+Dump SQL:
+
+ mysqldump --default-character-set=utf8 bengseng_giftumall > bengseng_giftumall.sql
+
+UnDump
+
+ mysql bengseng_giftumall < bengseng_giftumall.sql
+
+Stvorennya usera:
+
+ create user 'taiwan'@'%' identified by '07d205c6711a53a2';
+
+Update parolya:
+
+ UPDATE user SET Password='07d205c6711a53a2' WHERE user='taiwan'; - parol' ne zawyfrovanyj
+ UPDATE user SET Password=PASSWORD('07d205c6711a53a2') WHERE user='taiwan'; - parol' zawyfrovanyj
+ FLUSH PRIVILEGES;
+
+Pryvjazka uzera do bazy:
+
+ GRANT ALL on bengseng_singming.* to singming@'%' WITH GRANT OPTION;
+
+nadaje uzeru prava root-a dlya vsih isnuju4yh i majbutnih baz (bazhano 2-j variant):
+
+ GRANT ALL privileges on *.* to 'fcgmedia_kaltura'@'localhost' with grant option;
+
+ GRANT ALL privileges on *.* to 'root'@'90.195.120.109' IDENTIFIED BY '845eEWdfksniermnklnkg3erg' with grant option;
+
+ GRANT ALL PRIVILEGES ON database.* TO ‘user’@'your_remote_host' IDENTIFIED BY 'newpassword';
+
+(If it is cPanel, then IP should be added in "Main >> SQL Services >> Additional MySQL Access Hosts" and then access from that IP can be allowed from user's cPanel)
+
+===============================================================================================================
+
+Howto see default values that set in 'my.cnf' file. Run this command:
+
+ mysqladmin variables
+===============================================================================================================
+
+How to restore InnoDB tables/DBs
+
+http://www.softwareprojects.com/resources/programming/t-how-to-fix-mysql-database-myisam-innodb-1634.html
+===============================================================================================================
+
+How to create dump of ALL DBs on MySQL (with users and passwords)
+
+mysqldump --all-databases
+===============================================================================================================
+
+TIME ZONE in MySQL:
+
+http://support.modwest.com/content/6/256/en/how-do-i-change-mysql-timezone.html
+http://www.electrictoolbox.com/mysql-set-timezone-per-connection/
+http://dev.mysql.com/doc/refman/5.5/en/time-zone-support.html
+
+default_time_zone=Europe/London  - should be added to my.cnf
+===============================================================================================================
+
+How to see size of DB:
+
+SELECT CONCAT(sum(ROUND(((DATA_LENGTH + INDEX_LENGTH - DATA_FREE) / 1024 / 1024),2))," MB") AS Size FROM INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA like '%DB_NAME%' ;
+===============================================================================================================
+
+Some useful help about MySQL:
+
+http://whynotwiki.com/MySQL
+===============================================================================================================
+
+Possible reasons of crashed MySQL Tables
+
+http://avinashsing.sunkur.com/2010/07/24/reasons-why-mysql-table-crashed-and-how-to-repair-it/
+===============================================================================================================
+
+Some frequently used MySQL commands for reference:
+
+# Create User:
+CREATE USER user [IDENTIFIED BY [PASSWORD] 'password'];
+
+# Create Database"
+$ mysqladmin -u <username> -p create <nameOfDatabase>
+
+# Drop/Delete Database:
+$ mysqladmin -u <username> -p drop <nameOfDatabase>
+
+# Check Process List
+$ mysqladmin -u root -p proc
+
+# Check Status at 5 seconds interval:
+$ mysqladmin -u root -p -i 5 status
+
+# Dump Database:
+$ mysqldump --opt -u <username> -h <hostname> <nameOfDatabase> -p > /path/to/file    
+
+# Dump ALL mySQL DBs:
+$ mysqldump --opt -u <username> -h <hostname> --all-databases -p > /path/to/file 
+
+# Import Database:
+$ mysql -h <host> -u <username> <nameOfDatabase> -p < /path/to/file
+
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER ON <dbname>.* TO <dbuser@localhost> [IDENTIFIED BY '<password>'];
+
+REVOKE ALL ON <dbname> FROM <dbuser@localhost>;
+
+CREATE DATABASE <dbname>;
+
+DROP DATABASE <dbname>;
+
+DROP TABLE <tablename1[, table2, table3...]>;
+
+# To activate new permissions:
+FLUSH PRIVILEGES; 
+
+USE <nameOfDatabase>;
+
+SHOW DATABASES;
+
+# show tables begining with the prefix
+SHOW TABLES LIKE 'prefix%'; 
+
+SELECT * FROM <nameOfTable>;
+
+DESCRIBE <nameOfTable>;
+
+INSERT INTO <table> <username, password, name1, name2, ...> VALUES ('user', password('pass'), 'value1', 'value2' ...);
+
+CREATE TABLE <newtable> AS SELECT DISTINCT <field> FROM <oldtable>;
+
+INSERT INTO <database.table> SELECT * FROM <database.table> WHERE <field> = <value>;
+
+ALTER TABLE <tableOldName> RENAME <tableNewName>;
+
+UPDATE <tableName> SET <field1> = <newValue> [WHERE <field2> = <currentValue>];
+===============================================================================================================
+
+How to change Engine for all TABLES in DB (in this case from MyISAM to INNODB):
+
+To do it you can use the following SHELL script:
+
+#!/bin/sh
+
+DBUSER=user
+DBPWD=password
+DBNAME=db
+ENGINE=INNODB
+
+for t in `echo "show tables" | mysql -u$DBUSER -p$DBPWD --batch --skip-column-names $DBNAME`; do
+ mysql -u$DBUSER -p$DBPWD $DBNAME -e "ALTER TABLE \`$t\` ENGINE = $ENGINE;";
+done
+===============================================================================================================
+
+How to see ENGINE got all tables in DB:
+
+SHOW TABLE STATUS;
+ or
+show variables like ‘have_innodb’;
+===============================================================================================================
+
+Jak stvoryty chystu bazu:
+
+ $ mysqladmin create hosting
+
+Grant permissions for studio user:
+
+ $ mysql -e "grant all privileges on hosting.* to studio@localhost identified by 'ANY_PASSWORD_YOU_WANT';"
+
+Jak dodaty/stvoryty tablytsyu z konkretnymy polyamy v MySQL DB:
+
+ CREATE TABLE admin (id int PRIMARY KEY, login varchar(60) UNIQUE, pass varchar(60), email varchar(100), max_users int);
+
+Jak dodaty dani v tsyu tablytsyu cherez MySQL:
+
+ mysql> INSERT INTO admin(id, login, pass, email, max_users) VALUES(0, 'admin', 'admin', 'webmaster@localhost', 100);
+ Query OK, 1 row affected (0.00 sec)
+
+ mysql>
+===============================================================================================================
+
+How to allow remote MySQL connection from one IP manually:
+
+ http://javierbracero.blogspot.co.uk/2012/05/how-to-enable-remote-access-to-mysql.html
+===============================================================================================================
+
+ERROR: [ERROR] /usr/sbin/mysqld: Table './mysql/db' is marked as crashed and should be repaired
+
+SOLUTION: service mysql start --skip-grant-tables - does NOT work on Ubuntu/Debian
+	  mysqlcheck -r mysql db
+	  service mysql stop
+	  service mysql start
+
+	Then it can be run:
+	 
+	  mysqlcheck -A -1
+==============================================================================================================
+
+"skip_networking" option in "my.cnf" file disable access to MySQL via 3306 Port, not only via network, but even localy via "localhost"
+==============================================================================================================
+
+How to chnage size of "ib_logfile*" files:
+
+
+STEP 01) Change the following in /etc/my.cnf
+
+ [mysqld]
+ innodb_log_buffer_size          = 32M
+ innodb_buffer_pool_size         = 3G
+ innodb_log_file_size            = 768M
+
+STEP 02) 
+
+ mysql -uroot -p -e"SET GLOBAL innodb_fast_shutdown = 0;"
+
+STEP 03) 
+
+ service mysql stop
+
+STEP 04) 
+
+ rm -f /var/lib/mysql/ib_logfile*
+
+STEP 05) service mysql start
+
+I added SET GLOBAL innodb_fast_shutdown = 0;. What does that do? It forces InnoDB to completely purge transactional changes from all of InnoDB moving parts, including the transactional logs (ib_logfile0, ib_logfile1). Thus, there is no need to backup the old ib_logfile0, ib_logfile1. If deleting them makes you nervous, then make0 STEP 04
+
+ mv /var/lib/mysql/ib_logfile* ..
+
+to put the old logs in /var/lib. If the recreation of the logs is successful and mysqld starts up, then you can delete the old logs.
+==========================================================================================================
+
+One of the possible wasy of MySQL optimization:
+
+ http://www.hardwaresecrets.com/article/How-to-Optimize-a-MySQL-Server/1747/
+==========================================================================================================
+
+Восстановление базы MySQL из бинарных логов
+
+ http://habrahabr.ru/post/50064/
+==========================================================================================================
+
+How to check how many users use 16-digits HASH password:
+
+ SELECT Host, User, Password FROM mysql.user WHERE LENGTH(Password) = 16;
+==========================================================================================================
