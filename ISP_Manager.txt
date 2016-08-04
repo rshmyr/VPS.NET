@@ -1,19 +1,19 @@
 1. Main conf file:
 
-/usr/local/ispmgr/etc/ispmgr.conf
+ /usr/local/ispmgr/etc/ispmgr.conf
 ------------------------------------------------------------------------------------------
 
 2. LOG file:
 
-/usr/local/ispmgr/var/ispmgr.log
+ /usr/local/ispmgr/var/ispmgr.log
 
 Some other LOG-files are present here too:
 
-/usr/local/ispmgr/var/
+ /usr/local/ispmgr/var/
 
 Dlya sajtiv loguy je tut:
 
-/var/www/httpd-logs/
+ /var/www/httpd-logs/
 ------------------------------------------------------------------------------------------
 
 3. Perform some tests fro ISP Manager:
