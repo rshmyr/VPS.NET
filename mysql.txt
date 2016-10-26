@@ -1,5 +1,7 @@
 TEST
 
+TESTS
+
 Had to do some fine tuning of MySQL 4.1.9 and here is what my.cnf file looks like for a 2GHz machine with 1GB of memory.
 
 [mysqld]
